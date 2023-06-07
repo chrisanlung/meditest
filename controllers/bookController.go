@@ -4,25 +4,28 @@ import (
 	"net/http"
 
 	"github.com/chrisanlung/meditest/models"
+	"github.com/chrisanlung/meditest/services"
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 type Controller struct {
-	DB *gorm.DB
+	BookService services.BookService
 }
 
 func (ctrl Controller) GetAllBooks(c *gin.Context) {
-	var books []models.Book
-	ctrl.DB.Find(&books)
+	books, err := ctrl.BookService.GetAllBooks()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 	c.JSON(http.StatusOK, books)
 }
 
 func (ctrl Controller) GetBookByID(c *gin.Context) {
-	var book models.Book
 	id := c.Param("id")
-	if err := ctrl.DB.First(&book, id).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Book not found!"})
+	book, err := ctrl.BookService.GetBookByID(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, book)
@@ -34,6 +37,12 @@ func (ctrl Controller) CreateBook(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	ctrl.DB.Create(&book)
-	c.JSON(http.StatusOK, book)
+
+	createdBook, err := ctrl.BookService.CreateBook(book)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, createdBook)
 }

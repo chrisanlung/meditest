@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/chrisanlung/meditest/controllers"
+	"github.com/chrisanlung/meditest/services"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -22,8 +23,8 @@ func main() {
 	db.AutoMigrate(&Book{})
 
 	r := gin.Default()
-
-	controller := controllers.Controller{DB: db}
+	bookService := services.BookService{DB: db}
+	controller := controllers.Controller{BookService: bookService}
 
 	InitializeRoutes(r, controller)
 
